@@ -1,0 +1,3 @@
+# For SW4STM32
+Debug/*
+!Debug/*.mk
