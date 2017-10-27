@@ -11,11 +11,21 @@
 #include <stdint.h>
 
 #define GPIOG_BASE_ADDR		0x40021800
-#define GPIO_MODE_OFF		0x0
-#define GPIO_OTYPE_OFF		0x4
-#define GPIO_OSPEED_OFF		0x8
-#define GPIO_PUPD_OFF		0xc
-#define GPIO_OD_OFF			0x14
+#define GpioG				((GpioReg *)(GPIOG_BASE_ADDR))
+
+typedef struct GpioReg GpioReg;
+struct GpioReg{
+	volatile uint32_t mode;			// 0h
+	volatile uint32_t outType;		// 4h
+	volatile uint32_t outSpeed;		// 8h
+	volatile uint32_t pullType;		// ch
+	volatile uint32_t inData;		// 10h
+	volatile uint32_t outData;		// 14h
+	volatile uint32_t bitData;		// 18h
+	volatile uint32_t lock;			// 1ch
+	volatile uint32_t altFuncLo;	// 20h
+	volatile uint32_t altFuncHi;	// 24h
+};
 
 // Pin Modes
 #define GPIO_MODE_IN		0
@@ -39,14 +49,7 @@
 #define GPIO_VHI_SPEED		3
 
 
-
 // Export variables to other modules
-extern uint32_t *gpioGMode;
-extern uint32_t *gpioGSpeed;
-extern uint32_t *gpioGPupd;
-extern uint32_t *gpioGOType;
-extern uint32_t *gpioGOD;
-
 void gpioGCOnfig(int pin, int mode, int outDriveType, int pullType, int speed);
 void gpioGWrite(int pin, int state);
 
