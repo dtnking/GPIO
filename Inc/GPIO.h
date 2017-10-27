@@ -10,8 +10,26 @@
 
 #include <stdint.h>
 
+#define GPIOA_BASE_ADDR		0x40020000
+#define GPIOB_BASE_ADDR		0x40020400
+#define GPIOC_BASE_ADDR		0x40020800
+#define GPIOD_BASE_ADDR		0x40020C00
+#define GPIOE_BASE_ADDR		0x40021000
+#define GPIOF_BASE_ADDR		0x40021400
 #define GPIOG_BASE_ADDR		0x40021800
+#define GPIOH_BASE_ADDR		0x40021C00
+#define GPIOI_BASE_ADDR		0x40022000
+
+#define GpioA				((GpioReg *)(GPIOA_BASE_ADDR))
+#define GpioB				((GpioReg *)(GPIOB_BASE_ADDR))
+#define GpioC				((GpioReg *)(GPIOC_BASE_ADDR))
+#define GpioD				((GpioReg *)(GPIOD_BASE_ADDR))
+#define GpioE				((GpioReg *)(GPIOE_BASE_ADDR))
+#define GpioF				((GpioReg *)(GPIOF_BASE_ADDR))
 #define GpioG				((GpioReg *)(GPIOG_BASE_ADDR))
+#define GpioH				((GpioReg *)(GPIOH_BASE_ADDR))
+#define GpioI				((GpioReg *)(GPIOI_BASE_ADDR))
+
 
 typedef struct GpioReg GpioReg;
 struct GpioReg{
@@ -50,7 +68,8 @@ struct GpioReg{
 
 
 // Export variables to other modules
-void gpioGCOnfig(int pin, int mode, int outDriveType, int pullType, int speed);
-void gpioGWrite(int pin, int state);
+void gpioConfig(GpioReg *Gpio, int pin, int mode, int outDriveType, int pullType, int speed);
+void gpioWrite(GpioReg *Gpio, int pin, int state);
+int gpioRead(GpioReg *Gpio, int pin);
 
 #endif /* GPIO_H_ */
