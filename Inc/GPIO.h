@@ -30,6 +30,8 @@
 #define GpioH				((GpioReg *)(GPIOH_BASE_ADDR))
 #define GpioI				((GpioReg *)(GPIOI_BASE_ADDR))
 
+#define SET_PIN(gpio,pinNum)		gpio->BSRR = ( 1 << pinNum )
+#define RESET_PIN(gpio,pinNum)		gpio->BSRR = ( 1 << ( 16 + pinNum ))
 
 typedef struct GpioReg GpioReg;
 struct GpioReg{
@@ -39,7 +41,7 @@ struct GpioReg{
 	volatile uint32_t pullType;		// ch
 	volatile uint32_t inData;		// 10h
 	volatile uint32_t outData;		// 14h
-	volatile uint32_t bitData;		// 18h
+	volatile uint32_t BSRR;		// 18h
 	volatile uint32_t lock;			// 1ch
 	volatile uint32_t altFuncLo;	// 20h
 	volatile uint32_t altFuncHi;	// 24h

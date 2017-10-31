@@ -40,6 +40,9 @@
 #include "stm32f4xx_hal.h"
 #include "GPIO.h"
 #include "RCC.h"
+#include "RNG.h"
+#include "NVIC.h"
+#include <stdio.h>
 
 /* USER CODE BEGIN Includes */
 #define redLedPin  		14
@@ -61,6 +64,7 @@ static void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+extern void initialise_monitor_handles(void);
 
 /* USER CODE END PFP */
 
@@ -72,7 +76,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	initialise_monitor_handles();
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -95,8 +99,16 @@ int main(void)
   MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
-  enableGpioA();
-  enableGpioG();
+  printf("Hello,world!\n");
+
+  nvicEnableIrq(80);
+  nvicSetPriority(80,4);
+
+  enableGpio(6);
+  enableGpio(0);
+  enableRng();
+  getRandomNumberByInterrupt();
+  int i=0;
   gpioConfig(GpioA,blueButtonPin,GPIO_MODE_IN,\
   		  	  0,GPIO_NO_PULL,0);
   gpioConfig(GpioG,redLedPin,GPIO_MODE_OUT,\
@@ -109,11 +121,21 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  volatile int blueButtonState;
+	 // int num = getRandomNumber();
+	 // printf("%d 0x%x\n", i++ , num);
+	 // volatile int blueButtonState;
+	 //volatile int lockPattern;
 	  gpioWrite(GpioG,redLedPin, 0);
 	  HAL_Delay(200);
 	  gpioWrite(GpioG,redLedPin, 1);
 	  HAL_Delay(200);
+	  /*   GpioG->lock = (1<<16)|(1<<redLedPin);
+	  GpioG->lock = 1 << redLedPin;
+	  GpioG->lock = (1<<16)|(1<<redLedPin);
+	  lockPattern = GpioG->lock;
+	  gpioConfig(GpioG,redLedPin,GPIO_MODE_IN,\
+	  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_HI_SPEED);
+
 
 	  blueButtonState = gpioRead(GpioA,blueButtonPin);
 	  if(blueButtonState == 1){
@@ -121,6 +143,7 @@ int main(void)
 	  } else{
 		  gpioWrite(GpioG,greenLedPin,0);
 	  }
+	  */
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -209,7 +232,9 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HASH_RNG_IRQHandler(void){
+	volatile int rand = Rng->DR;
+}
 /* USER CODE END 4 */
 
 /**

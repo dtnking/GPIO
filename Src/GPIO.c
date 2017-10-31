@@ -21,11 +21,19 @@ void gpioConfig(GpioReg *Gpio, int pin, int mode, int outDriveType, int pullType
 	Gpio->outType |= outDriveType << pin;			// Set pin drive-type
 }
 
-void gpioWrite(GpioReg *Gpio, int pin, int state){
+void _gpioWrite(GpioReg *Gpio, int pin, int state){
 	if(state == 1){
 		Gpio->outData |= 1 << pin;
 	}else {
 		Gpio->outData &= ~(1 << pin);
+	}
+}
+
+void gpioWrite(GpioReg *Gpio, int pin, int state){
+	if(state == 1){
+		SET_PIN(Gpio,pin);
+	}else {
+		RESET_PIN(Gpio,pin);
 	}
 }
 
