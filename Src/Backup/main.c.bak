@@ -38,8 +38,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+#include "GPIO.h"
+#include "RCC.h"
+#include "RNG.h"
+#include "NVIC.h"
+#include "SysCfg.h"
+#include "SysTick.h"
+#include "EXTI.h"
+#include <stdio.h>
 
 /* USER CODE BEGIN Includes */
+#define redLedPin  		14
+#define greenLedPin  	13
+#define blueButtonPin 	0
 
 /* USER CODE END Includes */
 
@@ -56,6 +67,7 @@ static void MX_GPIO_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+extern void initialise_monitor_handles(void);
 
 /* USER CODE END PFP */
 
@@ -67,7 +79,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	initialise_monitor_handles();
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -90,6 +102,57 @@ int main(void)
   MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
+  printf("Hello,world!\n");
+
+  //Enable RNG & HASH Interrupt
+  //nvicEnableIrq(80);
+  //nvicSetPriority(80,4);
+
+  //***********Enable EXTI0 Interrupt***************
+ /*
+   nvicEnableIrq(6);
+   nvicSetPriority(6,4);
+   sysCfgConfigureGPIO(0,PORTA);
+   extIntClearPR();
+   extIntEnable(0);
+   extMaskDisable(0);
+   setRisingEdge();
+*/
+
+  //***********Enable SysTick***********************
+  /*sysTickSetReload(11250000);
+  sysTickPrescaledSpeed();
+  sysTickClrCounter();
+  sysTickEnable();
+  sysTickInterEnable();
+  sysTickDisable();
+  */
+
+  //***********Enable RNG*************************
+  //enableRng();
+
+  //***********Enable GPIO*************************
+  enableGpio(6);		// port G
+  enableGpio(0);		// port A
+
+  //**********Configure GPIO************************
+  gpioConfig(GpioA,blueButtonPin,GPIO_MODE_IN,\
+  		  	  0,GPIO_NO_PULL,0);
+  gpioConfig(GpioG,greenLedPin,GPIO_MODE_OUT,\
+  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_LOW_SPEED);
+
+  gpioConfig(GpioA,8,GPIO_MODE_AF,\
+  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
+  gpioConfigAltFunction(GpioA,8,ALT_FUNCT0);
+
+  rccSelectMco1Src(HI_SPEED_EXT);
+
+  rccSelectMco1Prescale(MCO_DIV_BY_5);
+
+
+  getRandomNumberByInterrupt();
+  int i=0;
+
 
   /* USER CODE END 2 */
 
@@ -97,6 +160,37 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  gpioWrite(GpioG,redLedPin,1);
+	  __WFI();
+	  gpioWrite(GpioG,redLedPin,0);
+	  /* gpioWrite(GpioG,redLedPin,1);
+	  while(!sysTickHasExpired())
+		  gpioWrite(GpioG,redLedPin,0);
+	  while(!sysTickHasExpired())
+		  gpioWrite(GpioG,redLedPin,1);
+	 // int num = getRandomNumber();
+	 // printf("%d 0x%x\n", i++ , num);
+	 // volatile int blueButtonState;
+	 //volatile int lockPattern;
+	  gpioWrite(GpioG,redLedPin, 0);
+	  HAL_Delay(200);
+	  gpioWrite(GpioG,redLedPin, 1);
+	  HAL_Delay(200);
+	  GpioG->lock = (1<<16)|(1<<redLedPin);
+	  GpioG->lock = 1 << redLedPin;
+	  GpioG->lock = (1<<16)|(1<<redLedPin);
+	  lockPattern = GpioG->lock;
+	  gpioConfig(GpioG,redLedPin,GPIO_MODE_IN,\
+	  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_HI_SPEED);
+
+
+	  blueButtonState = gpioRead(GpioA,blueButtonPin);
+	  if(blueButtonState == 1){
+		  gpioWrite(GpioG,greenLedPin,1);
+	  } else{
+		  gpioWrite(GpioG,greenLedPin,0);
+	  }
+	  */
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -185,7 +279,25 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void EXTI0_IRQHandler(void){
+	extIntClearPR();
+	static volatile int count = 0;
+	gpioWrite(GpioG,redLedPin,1);
+	count ++;
+	gpioWrite(GpioG,redLedPin,0);
 
+}
+
+void My_SysTick_Handler(void){
+	static int ledState = 0;
+// Just do nothing , but reading the CTRL register to clear the counter flag.
+	volatile int flags = sysTick->CTRL;
+	gpioWrite(GpioG,redLedPin,(ledState = !ledState));
+
+}
+void HASH_RNG_IRQHandler(void){
+	volatile int rand = Rng->DR;
+}
 /* USER CODE END 4 */
 
 /**
