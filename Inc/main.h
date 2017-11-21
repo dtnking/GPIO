@@ -51,6 +51,7 @@
 /* USER CODE END Private defines */
 
 void _Error_Handler(char *, int);
+void wait500ms();
 
 #define Error_Handler() _Error_Handler(__FILE__, __LINE__)
 

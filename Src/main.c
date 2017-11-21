@@ -48,6 +48,8 @@
 #include "SysCfg.h"
 #include "SysTick.h"
 #include "EXTI.h"
+#include "Timer.h"
+#include "DbgMcu.h"
 #include <stdio.h>
 
 #define redLedPin  		14
@@ -146,13 +148,19 @@ int main(void)
   		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
   gpioConfigAltFunction(GpioA,8,ALT_FUNCT0);
 
-  rccSelectMco1Src(HI_SPEED_EXT);
-  rccSelectMco1Prescale(MCO_DIV_BY_5);
+  //rccSelectMco1Src(HI_SPEED_EXT);
+  //rccSelectMco1Prescale(MCO_DIV_BY_5);
+
+  //************Halt Timer8***************************
+  haltTimer8WhenDebugging();
 
 
-  getRandomNumberByInterrupt();
+  //************Enable Timer8***************************
+  initTimer8();
+  initTimer8Channel1();
+
+  //getRandomNumberByInterrupt();
   int i=0;
-
 
   /* USER CODE END 2 */
 
@@ -160,9 +168,13 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  gpioWrite(GpioG,redLedPin,1);
-	  __WFI();
-	  gpioWrite(GpioG,redLedPin,0);
+	  gpioWrite(GpioG,greenLedPin,1);
+	  wait500ms();
+	  gpioWrite(GpioG,greenLedPin,0);
+	  wait500ms();
+
+	  //__WFI();
+	  //gpioWrite(GpioG,redLedPin,0);
 	  /* gpioWrite(GpioG,redLedPin,1);
 	  while(!sysTickHasExpired())
 		  gpioWrite(GpioG,redLedPin,0);
@@ -293,6 +305,11 @@ void HASH_RNG_IRQHandler(void){
   * @param  None
   * @retval None
   */
+
+void wait500ms(){
+	while(!(Timer8->SR & 1));					// Check update interrupt flag(UIF) of TIM8_SR
+	Timer8->SR &= ~1;							// Clear the flag
+}
 void _Error_Handler(char * file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
