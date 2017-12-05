@@ -10,8 +10,12 @@
 #include <stdint.h>
 
 #define DBGMCU_APB2_FZ		(*(uint32_t *)(0xE004200C))
+#define DBGMCU_APB1_FZ		(*(uint32_t *)(0xE0042008))
+
 #define DBG_TIM8_STOP		(1<<1)
+#define DBG_I2C1_STOP 		(1<<21)
 
 #define haltTimer8WhenDebugging()		(DBGMCU_APB2_FZ |= DBG_TIM8_STOP)
+#define haltI2c1WhenDebugging()			(DBGMCU_APB1_FZ |= DBG_I2C1_STOP)
 
 #endif /* DBGMCU_H_ */

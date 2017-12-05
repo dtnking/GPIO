@@ -50,6 +50,7 @@
 #include "EXTI.h"
 #include "Timer.h"
 #include "DbgMcu.h"
+#include "I2C.h"
 #include <stdio.h>
 
 #define redLedPin  		14
@@ -152,15 +153,20 @@ int main(void)
   //rccSelectMco1Prescale(MCO_DIV_BY_5);
 
   //************Halt Timer8***************************
-  haltTimer8WhenDebugging();
+  //haltTimer8WhenDebugging();
 
 
   //************Enable Timer8***************************
-  initTimer8();
-  initTimer8Channel1();
+  //initTimer8();
+  //initTimer8Channel1();
 
   //getRandomNumberByInterrupt();
   int i=0;
+
+  //Start I2c
+
+  initI2C();
+  haltI2c1WhenDebugging();
 
   /* USER CODE END 2 */
 
@@ -168,10 +174,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  gpioWrite(GpioG,greenLedPin,1);
-	  wait500ms();
-	  gpioWrite(GpioG,greenLedPin,0);
-	  wait500ms();
+	  int i;
+	  while (1){
+		  i++;
+	  }
+	 // gpioWrite(GpioG,greenLedPin,1);
+	 // wait500ms();
+	 // gpioWrite(GpioG,greenLedPin,0);
+	 // wait500ms();
 
 	  //__WFI();
 	  //gpioWrite(GpioG,redLedPin,0);
