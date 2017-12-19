@@ -58,13 +58,13 @@ struct RccReg {
 
 #define rccSelectMco1Src(x)							\
 		do{											\
-			rcc->cfgr &= (~(3 << 21));					\
+			rcc->cfgr &= (~(3 << 21));				\
 			rcc->cfgr |= (x << 21);					\
 		}while(0)
 
 #define rccSelectMco1Prescale(x)					\
 		do{											\
-			rcc->cfgr &= ~(7<<21);					\
+			rcc->cfgr &= ~(7<<24);					\
 			rcc->cfgr |= (x<<24);					\
 		}while(0)
 

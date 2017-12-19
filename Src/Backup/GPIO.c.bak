@@ -21,14 +21,14 @@ void gpioConfig(GpioReg *Gpio, int pin, int mode, int outDriveType, int pullType
 	Gpio->outType |= outDriveType << pin;			// Set pin drive-type
 }
 
-void gpioConfigAltFunction(GpioReg *Gpio, int pin,int altFunction ){
-	if(pin>7){
-		Gpio->altFuncLo &= (0xf<<pin);
-		Gpio->altFuncLo |= (altFunction<<pin);
+void gpioConfigAltFunction(GpioReg *Gpio, int pin,int altFunction){
+	if(pin<8){
+		Gpio->altFuncLo &= ~(0xf<<pin*4);
+		Gpio->altFuncLo |= (altFunction<< pin*4);
 	}
 	else{
-		Gpio->altFuncHi &= (0xf<<pin);
-		Gpio->altFuncHi |= (altFunction<<pin);
+		Gpio->altFuncHi &= ~(0xf<<((pin-8)*4));
+		Gpio->altFuncHi |= (altFunction<<((pin-8)*4));
 
 	}
 }

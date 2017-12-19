@@ -38,6 +38,9 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f4xx_hal.h"
+
+/* USER CODE BEGIN Includes */
+
 #include "GPIO.h"
 #include "RCC.h"
 #include "RNG.h"
@@ -45,13 +48,16 @@
 #include "SysCfg.h"
 #include "SysTick.h"
 #include "EXTI.h"
+#include "Timer.h"
+#include "Flash.h"
+#include "DbgMcu.h"
+#include "I2C.h"
 #include <stdio.h>
+#include "USART.h"
 
-/* USER CODE BEGIN Includes */
 #define redLedPin  		14
 #define greenLedPin  	13
 #define blueButtonPin 	0
-
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -79,7 +85,7 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-	initialise_monitor_handles();
+//	initialise_monitor_handles();
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -102,7 +108,7 @@ int main(void)
   MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
-  printf("Hello,world!\n");
+//  printf("Hello,world!\n");
 
   //Enable RNG & HASH Interrupt
   //nvicEnableIrq(80);
@@ -145,14 +151,40 @@ int main(void)
   		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
   gpioConfigAltFunction(GpioA,8,ALT_FUNCT0);
 
-  rccSelectMco1Src(HI_SPEED_EXT);
+  //rccSelectMco1Src(HI_SPEED_EXT);
+  //rccSelectMco1Prescale(MCO_DIV_BY_5);
 
-  rccSelectMco1Prescale(MCO_DIV_BY_5);
+  //************Halt Timer8***************************
+  //haltTimer8WhenDebugging();
 
 
-  getRandomNumberByInterrupt();
+  //************Enable Timer8***************************
+  //initTimer8();
+  //initTimer8Channel1();
+
+  //getRandomNumberByInterrupt();
   int i=0;
 
+
+  initUsart1();
+
+
+  //writeMessage("Hello World",(char *)0x08084000);
+
+  //******************Enable FLASH******************
+ /* flashEraseSector(13);
+  if(flashEraseSector(13)==1){
+	 flashEnableProgramming(FLASH_BYTE_SIZE);
+	 writeMessage("Hello World",(char *)0x08084000);
+	 flashDisable(0);
+	  while(1);
+  }else{
+	  while(1);
+  }*/
+  //Start I2c
+
+//  initI2C();
+  //haltI2c1WhenDebugging();
 
   /* USER CODE END 2 */
 
@@ -160,9 +192,29 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  gpioWrite(GpioG,redLedPin,1);
-	  __WFI();
-	  gpioWrite(GpioG,redLedPin,0);
+
+	  usartTransmit("h");
+	  usartTransmit("e");
+	  usartTransmit("l");
+	  usartTransmit("l");
+	  usartTransmit("o");
+	  usartTransmit(" ");
+	  usartTransmit("w");
+	  usartTransmit("o");
+	  usartTransmit("r");
+	  usartTransmit("l");
+	  usartTransmit("d");
+
+
+
+
+	 // gpioWrite(GpioG,greenLedPin,1);
+	 // wait500ms();
+	 // gpioWrite(GpioG,greenLedPin,0);
+	 // wait500ms();
+
+	  //__WFI();
+	  //gpioWrite(GpioG,redLedPin,0);
 	  /* gpioWrite(GpioG,redLedPin,1);
 	  while(!sysTickHasExpired())
 		  gpioWrite(GpioG,redLedPin,0);
@@ -220,7 +272,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLM = 4;
   RCC_OscInitStruct.PLL.PLLN = 360;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
   RCC_OscInitStruct.PLL.PLLQ = 4;

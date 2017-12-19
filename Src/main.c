@@ -49,9 +49,12 @@
 #include "SysTick.h"
 #include "EXTI.h"
 #include "Timer.h"
+#include "Flash.h"
 #include "DbgMcu.h"
 #include "I2C.h"
 #include <stdio.h>
+#include "USART.h"
+#include <string.h>
 
 #define redLedPin  		14
 #define greenLedPin  	13
@@ -101,12 +104,11 @@ int main(void)
   /* USER CODE BEGIN SysInit */
 
   /* USER CODE END SysInit */
-
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
+ // MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
-  printf("Hello,world!\n");
+//  printf("Hello,world!\n");
 
   //Enable RNG & HASH Interrupt
   //nvicEnableIrq(80);
@@ -137,17 +139,17 @@ int main(void)
 
   //***********Enable GPIO*************************
   enableGpio(6);		// port G
-  enableGpio(0);		// port A
+//  enableGpio(0);		// port A
 
   //**********Configure GPIO************************
-  gpioConfig(GpioA,blueButtonPin,GPIO_MODE_IN,\
-  		  	  0,GPIO_NO_PULL,0);
-  gpioConfig(GpioG,greenLedPin,GPIO_MODE_OUT,\
-  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_LOW_SPEED);
-
-  gpioConfig(GpioA,8,GPIO_MODE_AF,\
+//  gpioConfig(GpioA,blueButtonPin,GPIO_MODE_IN,\
+//  		  	  0,GPIO_NO_PULL,0);
+  gpioConfig(GpioG,redLedPin,GPIO_MODE_OUT,\
   		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
-  gpioConfigAltFunction(GpioA,8,ALT_FUNCT0);
+//
+//  gpioConfig(GpioA,8,GPIO_MODE_AF,\
+//  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
+//  gpioConfigAltFunction(GpioA,8,ALT_FUNCT0);
 
   //rccSelectMco1Src(HI_SPEED_EXT);
   //rccSelectMco1Prescale(MCO_DIV_BY_5);
@@ -162,22 +164,68 @@ int main(void)
 
   //getRandomNumberByInterrupt();
   int i=0;
+//  char data[250];
 
+  initUsart1();
+
+
+  char *Data = (char*)malloc(sizeof(char) * 100);
+  //writeMessage("Hello World",(char *)0x08084000);
+
+  //******************Enable FLASH******************
+ /* flashEraseSector(13);
+  if(flashEraseSector(13)==1){
+	 flashEnableProgramming(FLASH_BYTE_SIZE);
+	 writeMessage("Hello World",(char *)0x08084000);
+	 flashDisable(0);
+	  while(1);
+  }else{
+	  while(1);
+  }*/
   //Start I2c
 
-  initI2C();
-  haltI2c1WhenDebugging();
-
+//  initI2C();
+  //haltI2c1WhenDebugging();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  int i;
-	  while (1){
-		  i++;
+//	  for(int i=0;i<250;i++){
+//		  data[i]=usart1->DR;
+//		  printf(data[i]);
+//		  printf("\n");
+//		  while(!(usart1->SR & RXNE));
+//	  }
+
+	  usartReceiveUntilEnter(&Data);
+
+		  if(strcmp("turn on", &Data) == 0){
+			  gpioWrite(GpioG,redLedPin,1);
+		  }
+		  else if(strcmp("turn off",&Data) == 0){
+			  gpioWrite(GpioG,redLedPin,0);
+		  }
+
 	  }
+//	  usartTransmit("h");
+//	  usartTransmit("e");
+//	  usartTransmit("l");
+//	  usartTransmit("l");
+//	  usartTransmit("o");
+//	  usartTransmit(" ");
+//	  usartTransmit("w");
+//	  usartTransmit("o");
+//	  usartTransmit("r");
+//	  usartTransmit("l");
+//	  usartTransmit("d");
+//	  usartTransmit("!");
+//	  usartTransmit("\n");
+
+
+
+
 	 // gpioWrite(GpioG,greenLedPin,1);
 	 // wait500ms();
 	 // gpioWrite(GpioG,greenLedPin,0);
@@ -220,7 +268,7 @@ int main(void)
   }
   /* USER CODE END 3 */
 
-}
+
 
 /** System Clock Configuration
 */
@@ -234,14 +282,26 @@ void SystemClock_Config(void)
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 360;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = 4;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Activate the Over-Drive mode 
+    */
+  if (HAL_PWREx_EnableOverDrive() != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -250,12 +310,12 @@ void SystemClock_Config(void)
     */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSE;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -284,7 +344,7 @@ static void MX_GPIO_Init(void)
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOH_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
+ // __HAL_RCC_GPIOA_CLK_ENABLE();
 
 }
 
@@ -315,11 +375,6 @@ void HASH_RNG_IRQHandler(void){
   * @param  None
   * @retval None
   */
-
-void wait500ms(){
-	while(!(Timer8->SR & 1));					// Check update interrupt flag(UIF) of TIM8_SR
-	Timer8->SR &= ~1;							// Clear the flag
-}
 void _Error_Handler(char * file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
