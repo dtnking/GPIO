@@ -1,6 +1,16 @@
 /*
  * USART.c
  *
+ *	The connection between UART1 pins on STM32f429ZIT6 and the USB-to-serial (CH340) are as follow:
+ *
+ *	STM32F429ZI	 | CH340
+ *	 Name   Pin	 | Name
+ *	---------------------
+ *    Tx	PA9	 | Rx
+ *	  Rx	PA10 | Tx
+ *	  GND	GND  | GND
+ *	---------------------
+ *
  *  Created on: Dec 12, 2017
  *      Author: user2
  */
@@ -17,11 +27,15 @@ void initUsart1(void){
 	gpioConfig(GpioA,10,GPIO_MODE_AF,GPIO_PUSH_PULL,GPIO_PULL_UP,GPIO_LOW_SPEED);
 	gpioConfigAltFunction(GpioA, 9 ,ALT_FUNCT7);
 	gpioConfigAltFunction(GpioA, 10 ,ALT_FUNCT7);
-
+	usartEnableDmaTx();
+	usartEnableDmaRx();
 	usart1->BRR =0x30d;
 
 	usart1->CR1 = OVER8|USART_EN|WORD_LEN_9|PARITY_CNTRL_EN|PARITY_SEL_ODD;
 	usart1->CR2 = STOP_2BIT;
+	usart1->CR1 |= TRANSMIT_EN;
+	usart1->CR1 |= RECEIVE_EN;
+
 
 }
 

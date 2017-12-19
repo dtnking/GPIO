@@ -55,6 +55,7 @@
 #include <stdio.h>
 #include "USART.h"
 #include <string.h>
+#include "Dma.h"
 
 #define redLedPin  		14
 #define greenLedPin  	13
@@ -162,9 +163,17 @@ int main(void)
   //initTimer8();
   //initTimer8Channel1();
 
+  //***********Enable DMA******************************
+  enableDMA(DMA2_DEV);
+  dmaInitForUsart1(dma2,2,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_P_TO_M,PFCTRL_DMA);
+  dmaInitForUsart1(dma2,7,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_EN,DIR_M_TO_P,PFCTRL_DMA);
+  char str[256] = "hello, world!\n";
+  dmaSetAddressAndSize(dma2,7,(uint32_t)str,0x40011004,strlen(str));
+
   //getRandomNumberByInterrupt();
   int i=0;
 //  char data[250];
+	usart1->CR1 |= TRANSMIT_EN;
 
   initUsart1();
 
@@ -183,33 +192,27 @@ int main(void)
 	  while(1);
   }*/
   //Start I2c
-
-//  initI2C();
+  //initI2C();
   //haltI2c1WhenDebugging();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-//	  for(int i=0;i<250;i++){
-//		  data[i]=usart1->DR;
-//		  printf(data[i]);
-//		  printf("\n");
-//		  while(!(usart1->SR & RXNE));
-//	  }
 
-	  usartReceiveUntilEnter(&Data);
-
-		  if(strcmp("turn on", &Data) == 0){
-			  gpioWrite(GpioG,redLedPin,1);
-		  }
-		  else if(strcmp("turn off",&Data) == 0){
-			  gpioWrite(GpioG,redLedPin,0);
-		  }
+//	  usartReceiveUntilEnter(Data);
+//
+//		  if(strcmp("turn on", Data) == 0){
+//			  gpioWrite(GpioG,redLedPin,1);
+//		  }
+//		  else if(strcmp("turn off",Data) == 0){
+//			  gpioWrite(GpioG,redLedPin,0);
+//		  }
 
 	  }
-//	  usartTransmit("h");
+// 	  usartTransmit("h");
 //	  usartTransmit("e");
 //	  usartTransmit("l");
 //	  usartTransmit("l");
@@ -362,7 +365,7 @@ void My_SysTick_Handler(void){
 	static int ledState = 0;
 // Just do nothing , but reading the CTRL register to clear the counter flag.
 	volatile int flags = sysTick->CTRL;
-	gpioWrite(GpioG,redLedPin,(ledState = !ledState));
+//	gpioWrite(GpioG,redLedPin,(ledState = !ledState));
 
 }
 void HASH_RNG_IRQHandler(void){

@@ -54,6 +54,13 @@ struct usartReg{
 #define STOP_2BIT			(2<<12)
 #define STOP_15BIT			(3<<12)
 
+//control register 3
+#define UART_DMA_Tx_EN		(1<<7)
+#define UART_DMA_Rx_EN		(1<<6)
+
+#define usartEnableDmaTx()  (usart1->CR3 |= UART_DMA_Tx_EN)
+#define usartEnableDmaRx()	(usart1->CR3 |= UART_DMA_Rx_EN)
+
 #define usart1				((usartReg *)(USART_BASE_ADDRS))
 
 void initUsart1(void);

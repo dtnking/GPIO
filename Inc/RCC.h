@@ -7,6 +7,7 @@
 
 #ifndef RCC_H_
 #define RCC_H_
+#include "Common.h"
 
 #include <stdint.h>
 
@@ -73,6 +74,6 @@ extern uint32_t *rccAhb1En;
 
 void enableGpio(int port);
 void enableRng(void);
-
+void enableDMA(int dmaPinBit);
 
 #endif /* RCC_H_ */
