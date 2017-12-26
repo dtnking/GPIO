@@ -37,3 +37,4 @@ void enableDMA(int dmaPinBit){
 	rcc->ahb1Rstr &= ~(1 << dmaPinBit); // Unreset DMAx
 	rcc->ahb1Enr |= (1 << dmaPinBit);  	// Start Clock DMAx
 }
+

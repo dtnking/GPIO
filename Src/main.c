@@ -53,6 +53,7 @@
 #include "DbgMcu.h"
 #include "I2C.h"
 #include <stdio.h>
+#include <malloc.h>
 #include "USART.h"
 #include <string.h>
 #include "Dma.h"
@@ -161,25 +162,40 @@ int main(void)
 
   //************Enable Timer8***************************
   //initTimer8();
-  //initTimer8Channel1();
+  initTimer8Channel1();
+  configureTimer8(125,1);
+
 
   //***********Enable DMA******************************
   enableDMA(DMA2_DEV);
-  dmaInitForUsart1(dma2,2,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_P_TO_M,PFCTRL_DMA);
-  dmaInitForUsart1(dma2,7,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_EN,DIR_M_TO_P,PFCTRL_DMA);
+ // dmaInitForUsart1(dma2,2,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_P_TO_M,PFCTRL_DMA);
+  //dmaInitForUsart1(dma2,7,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_M_TO_P,PFCTRL_DMA);
   char str[256] = "hello, world!\n";
-  dmaSetAddressAndSize(dma2,7,(uint32_t)str,0x40011004,strlen(str));
+
+  dmaInitForUsart1(dma2,2,CH7,INCR4,SIN_TRANFER,DBM_DIS,PL_VHI,PINCOS_DIS,MSIZE_HALFWORD,PSIZE_HALFWORD,MINC_EN,PINC_DIS,CIRC_DIS,DIR_M_TO_P,PFCTRL_DMA);
+ // dmaSetAddressAndSize(dma2,7,(uint32_t)str,0x40011004,strlen(str));
 
   //getRandomNumberByInterrupt();
-  int i=0;
+
 //  char data[250];
-	usart1->CR1 |= TRANSMIT_EN;
+//	usart1->CR1 |= TRANSMIT_EN;
+//
+//  initUsart1();
 
-  initUsart1();
+//  char *Data = (char*)malloc(sizeof(char) * 100);
 
-
-  char *Data = (char*)malloc(sizeof(char) * 100);
+  uint16_t timerWaveform[]= {11,125,11,125,125+2};
+ // serialPrint("Data: %d, %s", 123, "Hello");
   //writeMessage("Hello World",(char *)0x08084000);
+ // toggleOutCompareChannel1WithForce();
+  forceOutCompareChannel1High();
+  Timer8->CCMR1 &= ~(7<<4);
+  Timer8->CCMR1 |= (3<<4);
+  Timer8->DIER	|= (1<<9);
+  dmaSetAddressAndSize(dma2,2,(uint32_t)timerWaveform,&Timer8->CCR1,strlen(timerWaveform));
+
+
+
 
   //******************Enable FLASH******************
  /* flashEraseSector(13);
@@ -199,8 +215,19 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
+
+
+
+
+//	  while(Timer8->SR &= CC1F_MATCH){
+//	  	  		Timer8->CCR1 = temp[y];
+//	  	  		y++;
+//	  	  		if(y>1)
+//	  	  			y=0;
+//	  }
 
 //	  usartReceiveUntilEnter(Data);
 //
@@ -285,7 +312,7 @@ void SystemClock_Config(void)
     */
   __HAL_RCC_PWR_CLK_ENABLE();
 
-  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
+  __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE3);
 
     /**Initializes the CPU, AHB and APB busses clocks 
     */
@@ -314,11 +341,11 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_5) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -335,13 +362,6 @@ void SystemClock_Config(void)
   HAL_NVIC_SetPriority(SysTick_IRQn, 0, 0);
 }
 
-/** Configure pins as 
-        * Analog 
-        * Input 
-        * Output
-        * EVENT_OUT
-        * EXTI
-*/
 static void MX_GPIO_Init(void)
 {
 

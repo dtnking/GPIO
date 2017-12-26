@@ -67,6 +67,7 @@ void initUsart1(void);
 void usartTransmit(char *val);
 uint8_t usartReceiveOneByte();
 void usartReceiveUntilEnter(char *rxBuffer);
+void serialPrint(char *message,...);
 
 #endif /* USART_H_ */
 

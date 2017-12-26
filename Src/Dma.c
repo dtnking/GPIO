@@ -39,7 +39,7 @@
 void dmaInitForUsart1(DmaReg *dma, int streamNum, int channel,int mb, int pb, int dbm, int p,int pinc, int ms, \
 					 int ps,int mi, int pi, int circ, int dir, int fc){
 	dma->S[streamNum].CR &= ~1;
-	dmaStreamSetChannel(dma,streamNum,channel);
+	dmaStreamSetMChannel(dma,streamNum,channel);
 	dmaStreamSetMBurst(dma,streamNum,mb);
 	dmaStreamSetPBurst(dma,streamNum,pb);
 	dmaStreamSetDBM(dma,streamNum,dbm);
@@ -60,7 +60,7 @@ void dmaSetAddressAndSize(DmaReg *dma,int streamNum,uint32_t memoryAddr,       \
 	dma->S[streamNum].PAR = peripheralAddr;
 	dma->S[streamNum].M0AR = memoryAddr;
 	dma->S[streamNum].NDTR = size;
-	dma->S[streamNum].CR |= 1;
+	dma->S[streamNum].CR |= DMA_STREAM_EN;
 }
 
 int dmaStreamCheckFlag(DmaReg *dma, int streamNum, int flag){
@@ -77,7 +77,4 @@ int dmaStreamCheckFlag(DmaReg *dma, int streamNum, int flag){
 	return *intrStatusReg & ( flag << (6 * streamNum + 16 * isUpper16));
 }
 
-void dmaStreamSetChannel(DmaReg *dma,int streamNum,int channel){
-				dma->S[streamNum].CR &= ~(7<<25);
-				dma->S[streamNum].CR |= (channel<<25);
-}
+

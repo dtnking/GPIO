@@ -105,7 +105,7 @@ struct DmaReg{
 #define DMA_HTIF		(1<<4)
 #define DMA_TCIF		(1<<5)
 
-
+#define DMA_STREAM_EN	1
 #define dmaStreamSetMChannel(d,s,c)			\
 			do{								\
 				((d)->S[s].CR) &= ~(7<<25);		\
@@ -183,6 +183,10 @@ struct DmaReg{
 				((d)->S[s].CR) &= ~(1<<5);		\
 				((d)->S[s].CR) |= (fc<<5);		\
 			}while(0)
-
+void dmaInitForUsart1(DmaReg *dma, int streamNum, int channel,int mb, int pb, int dbm, int p,int pinc, int ms, \
+					 int ps,int mi, int pi, int circ, int dir, int fc);
+void dmaSetAddressAndSize(DmaReg *dma,int streamNum,uint32_t memoryAddr,       \
+						  uint32_t peripheralAddr,uint32_t size);
+int dmaStreamCheckFlag(DmaReg *dma, int streamNum, int flag);
 
 #endif /* DMA_H_ */

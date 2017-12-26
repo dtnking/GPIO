@@ -50,8 +50,27 @@ struct TimerReg{
 
 };
 
+#define CC1P_HI			0
+#define CC1P_LO			1
+#define CC1E_EN			1
+#define CC1E_DIS		0
 
+#define NO_PRELOAD		0
+
+#define CC1E_EN			1
+#define CC2E_EN			(1<<4)
+#define CC3E_EN			(1<<8)
+#define CC4E_EN			(1<<12)
+
+#define FORCE_HI		(4<<4)
+#define FORCE_LO		(5<<4)
+
+
+
+#define CC1F_MATCH		(1<<1)
 #define Timer8			((TimerReg *)(TIMER8_BASE_ADDR))
 void initTimer8();
+void configureTimer8(int arrVal, int pscVal);
+void initTimer8Channel1(void);
 
 #endif /* TIMER_H_ */
