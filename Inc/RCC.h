@@ -14,6 +14,7 @@
 #define RCC_BASE_ADDR		0x40023800
 #define rcc					((RccReg *)(RCC_BASE_ADDR))
 
+#define rccClearAllResetFlags()			(rcc->csr |= RCC_RMVF)
 #define HI_SPEED_CLK		0
 #define LO_SPEED_EXT		1
 #define HI_SPEED_EXT		2
@@ -69,11 +70,25 @@ struct RccReg {
 			rcc->cfgr |= (x<<24);					\
 		}while(0)
 
+
+// Control Status Register (CSR)
+#define RCC_LPWRRSTF		(1<<31)
+#define RCC_WWDGRSTF		(1<<30)
+#define RCC_IWDGRSTF		(1<<29)
+#define RCC_SFTRSTF			(1<<28)
+#define RCC_PORRSTF			(1<<27)
+#define RCC_PINRSTF			(1<<26)
+#define RCC_BORRSRSTF		(1<<25)
+#define RCC_RMVF			(1<<24)
+
+
 extern uint32_t *rccAhb1Rst;
 extern uint32_t *rccAhb1En;
 
 void enableGpio(int port);
 void enableRng(void);
 void enableDMA(int dmaPinBit);
+void enableAdc();
+void enableWWDG();
 
 #endif /* RCC_H_ */

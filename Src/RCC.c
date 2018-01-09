@@ -38,3 +38,12 @@ void enableDMA(int dmaPinBit){
 	rcc->ahb1Enr |= (1 << dmaPinBit);  	// Start Clock DMAx
 }
 
+void enableAdc(){
+	rcc->apb2Rstr  &= ~(1 <<8);
+	rcc->apb2Enr |= (1 << 8);
+}
+
+void enableWWDG(){
+	rcc->apb1Rstr &= ~(1 <<11);
+	rcc->apb1Enr |= (1<<11);
+}

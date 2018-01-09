@@ -52,3 +52,7 @@ void gpioWrite(GpioReg *Gpio, int pin, int state){
 int gpioRead(GpioReg *Gpio, int pin){
 	return Gpio->inData & (1 << pin);
 }
+
+void gpioToggle(GpioReg *Gpio, int pin){
+	Gpio->outData = ~(Gpio->outData);
+}

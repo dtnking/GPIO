@@ -57,6 +57,8 @@
 #include "USART.h"
 #include <string.h>
 #include "Dma.h"
+#include "Adc.h"
+#include "IWDG.h"
 
 #define redLedPin  		14
 #define greenLedPin  	13
@@ -77,6 +79,7 @@ static void MX_GPIO_Init(void);
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
 extern void initialise_monitor_handles(void);
+void printCausedReset(void);
 
 /* USER CODE END PFP */
 
@@ -110,7 +113,7 @@ int main(void)
  // MX_GPIO_Init();
 
   /* USER CODE BEGIN 2 */
-//  printf("Hello,world!\n");
+ printf("Hello,world!\n");
 
   //Enable RNG & HASH Interrupt
   //nvicEnableIrq(80);
@@ -126,7 +129,8 @@ int main(void)
    extMaskDisable(0);
    setRisingEdge();
 */
-
+ enableGpio(0);
+ enableGpio(2);
   //***********Enable SysTick***********************
   /*sysTickSetReload(11250000);
   sysTickPrescaledSpeed();
@@ -146,8 +150,10 @@ int main(void)
   //**********Configure GPIO************************
 //  gpioConfig(GpioA,blueButtonPin,GPIO_MODE_IN,\
 //  		  	  0,GPIO_NO_PULL,0);
-  gpioConfig(GpioG,redLedPin,GPIO_MODE_OUT,\
+  gpioConfig(GpioG,greenLedPin,GPIO_MODE_OUT,\
   		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
+  gpioConfig(GpioG,redLedPin,GPIO_MODE_OUT,\
+   		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
 //
 //  gpioConfig(GpioA,8,GPIO_MODE_AF,\
 //  		  	  GPIO_PUSH_PULL,GPIO_NO_PULL,GPIO_VHI_SPEED);
@@ -162,17 +168,22 @@ int main(void)
 
   //************Enable Timer8***************************
   //initTimer8();
-  initTimer8Channel1();
-  configureTimer8(125,1);
+  //initTimer8Channel1();
+  //configureTimer8(125,1);
+
+  //************Enable ADC***************************
+  // initAdc();
+
 
 
   //***********Enable DMA******************************
-  enableDMA(DMA2_DEV);
- // dmaInitForUsart1(dma2,2,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_P_TO_M,PFCTRL_DMA);
+  // enableDMA(DMA2_DEV);
+  // dmaInitForUsart1(dma2,2,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_P_TO_M,PFCTRL_DMA);
   //dmaInitForUsart1(dma2,7,CH4,INCR4,INCR4,DBM_DIS,PL_HI,PINCOS_DIS,MSIZE_BYTE,PSIZE_BYTE,MINC_EN,PINC_DIS,CIRC_DIS,DIR_M_TO_P,PFCTRL_DMA);
   char str[256] = "hello, world!\n";
 
-  dmaInitForUsart1(dma2,2,CH7,INCR4,SIN_TRANFER,DBM_DIS,PL_VHI,PINCOS_DIS,MSIZE_HALFWORD,PSIZE_HALFWORD,MINC_EN,PINC_DIS,CIRC_DIS,DIR_M_TO_P,PFCTRL_DMA);
+
+ // dmaInitForUsart1(dma2,2,CH7,INCR4,SIN_TRANFER,DBM_DIS,PL_VHI,PINCOS_DIS,MSIZE_HALFWORD,PSIZE_HALFWORD,MINC_EN,PINC_DIS,CIRC_DIS,DIR_M_TO_P,PFCTRL_DMA);
  // dmaSetAddressAndSize(dma2,7,(uint32_t)str,0x40011004,strlen(str));
 
   //getRandomNumberByInterrupt();
@@ -184,15 +195,15 @@ int main(void)
 
 //  char *Data = (char*)malloc(sizeof(char) * 100);
 
-  uint16_t timerWaveform[]= {11,125,11,125,125+2};
+ // uint16_t timerWaveform[]= {11,125,11,125,125+2};
  // serialPrint("Data: %d, %s", 123, "Hello");
   //writeMessage("Hello World",(char *)0x08084000);
  // toggleOutCompareChannel1WithForce();
-  forceOutCompareChannel1High();
-  Timer8->CCMR1 &= ~(7<<4);
-  Timer8->CCMR1 |= (3<<4);
-  Timer8->DIER	|= (1<<9);
-  dmaSetAddressAndSize(dma2,2,(uint32_t)timerWaveform,&Timer8->CCR1,strlen(timerWaveform));
+//  forceOutCompareChannel1High();
+//  Timer8->CCMR1 &= ~(7<<4);
+//  Timer8->CCMR1 |= (3<<4);
+//  Timer8->DIER	|= (1<<9);
+//  dmaSetAddressAndSize(dma2,2,(uint32_t)timerWaveform,&Timer8->CCR1,strlen(timerWaveform));
 
 
 
@@ -207,9 +218,45 @@ int main(void)
   }else{
 	  while(1);
   }*/
+
   //Start I2c
   //initI2C();
   //haltI2c1WhenDebugging();
+  int i=0;
+
+  // Experiment for WWDG as a time keeper starts
+  printCausedReset();
+  rccClearAllResetFlags();
+  enableWWDG();
+
+  nvicEnableIrq(0);
+  nvicSetPriority(0,10);
+
+  wwdgSetWindowValue(55);			// Set Window to 5ms
+  wwdgSetPrescaler(WWDG_COUNTER_CLK_DIV_2);
+  wwdgSetTimeOutAndActivate(55);		// Set timeout
+  clearEarlyWakeupInterrupt();
+  wwdgEnableWakeupInterrupt();
+
+  while(1){
+	  gpioWrite(GpioG,greenLedPin,1);
+	  waitFor500ms();
+	  gpioWrite(GpioG,greenLedPin,0);
+	  waitFor500ms();
+  }
+  // Experiment for WWDG as a time keeper ends
+
+
+// Independent Watchdog Experiment starts
+//  printCausedReset();
+//  rccClearAllResetFlags();
+//  HAL_Delay(1000);
+//  iwdgStart();
+//  iwdgEnableConfiguration();
+//  iwdgWaitTillPrescalerDivided(PRESCALER_DIV_64);
+//  iwdgWaitTillLoaded(2000);
+//  iwdgReset();
+// Independent Watchdog Experiment ends
 
   /* USER CODE END 2 */
 
@@ -218,10 +265,27 @@ int main(void)
 
   while (1)
   {
+	  //Window Watchdog Experiment Starts
+	  HAL_Delay(2);						//Change the digit to get different situation (within the window will not reset)
+	  wwdgSetTimeOutAndActivate(63);	// Refresh the value
+	  //Window Watchdog Experiment Ends
+
+//	  gpioWrite(GpioG,greenLedPin,1);
+//	  HAL_Delay(50);
+//	  gpioWrite(GpioG,greenLedPin,0);
+//	  HAL_Delay(50);
 
 
+// ADC Experiment starts
+//	  while(adc1->CR2 & EOC_IS_SET){
+//		  float x= (3.3* (adc1->DR))/4096;
+//		  printf("%f\n",x);
+//		  adc1->SR &= RESET_OVR;
+//		  adc1->CR2  |= START_CONV;
+//	  }
+// ADC Experiment ends
 
-
+//
 //	  while(Timer8->SR &= CC1F_MATCH){
 //	  	  		Timer8->CCR1 = temp[y];
 //	  	  		y++;
@@ -229,6 +293,7 @@ int main(void)
 //	  	  			y=0;
 //	  }
 
+// USART Experiment starts
 //	  usartReceiveUntilEnter(Data);
 //
 //		  if(strcmp("turn on", Data) == 0){
@@ -237,8 +302,6 @@ int main(void)
 //		  else if(strcmp("turn off",Data) == 0){
 //			  gpioWrite(GpioG,redLedPin,0);
 //		  }
-
-	  }
 // 	  usartTransmit("h");
 //	  usartTransmit("e");
 //	  usartTransmit("l");
@@ -252,7 +315,7 @@ int main(void)
 //	  usartTransmit("d");
 //	  usartTransmit("!");
 //	  usartTransmit("\n");
-
+// USART Experiment ends
 
 
 
@@ -297,8 +360,43 @@ int main(void)
 
   }
   /* USER CODE END 3 */
+}
 
+void waitFor500ms(){
+	int y=0;
+//	wwdgSetWindowValue(55);			// Set Window to 5ms
+//	wwdgEnableWakeupInterrupt();
+//	wwdgSetPrescaler(WWDG_COUNTER_CLK_DIV_2);
+//	wwdgSetTimeOutAndActivate(55);		// Set timeout
+	while(y++<50){
+		while(!wwdgIsEarlyWakeupInterrupt());
+		wwdgSetTimeOutAndActivate(55);			//10 ms
+		clearEarlyWakeupInterrupt();
+	}
 
+}
+
+void printCausedReset(void){
+	printf("Cause of reset : \n");
+	if(rcc->csr & RCC_LPWRRSTF)
+		printf("\tLow Power Reset\n");
+	if(rcc->csr & RCC_WWDGRSTF)
+		printf("\tWindow Watchdog Reset\n");
+	if(rcc->csr & RCC_IWDGRSTF)
+		printf("\tIndependent Watchdog Reset\n");
+	if(rcc->csr & RCC_SFTRSTF)
+		printf("\tSoftware Reset\n");
+	if(rcc->csr & RCC_PORRSTF)
+		printf("\tPower On Reset\n");
+	if(rcc->csr & RCC_PINRSTF)
+		printf("\tNSRT Reset\n");
+	if(rcc->csr & RCC_BORRSRSTF)
+		printf("\tBrownout Reset\n");
+	if(rcc->csr & RCC_RMVF)
+		printf("\tRemove Reset\n");
+	else
+		printf("\tNo Reset");
+}
 
 /** System Clock Configuration
 */
@@ -388,6 +486,17 @@ void My_SysTick_Handler(void){
 //	gpioWrite(GpioG,redLedPin,(ledState = !ledState));
 
 }
+
+void WWDG_IRQHandler(void){
+	static int i = 0;
+	wwdgSetTimeOutAndActivate(55);			//10 ms
+	clearEarlyWakeupInterrupt();
+	if(i++ >= 50){
+		gpioToggle(GpioG,redLedPin);
+		i=0;
+	}
+
+}
 void HASH_RNG_IRQHandler(void){
 	volatile int rand = Rng->DR;
 }
@@ -402,11 +511,12 @@ void _Error_Handler(char * file, int line)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
-  while(1) 
+  while(1)
   {
   }
-  /* USER CODE END Error_Handler_Debug */ 
+  /* USER CODE END Error_Handler_Debug */
 }
+//}
 
 #ifdef USE_FULL_ASSERT
 
